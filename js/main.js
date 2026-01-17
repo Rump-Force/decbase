@@ -1,286 +1,287 @@
-const btnBurger = document.querySelector('.button__burger')
-const btnMenu = document.querySelector('.menu')
-const overlay = document.querySelector('.overlay')
+/**
+ * ========================================================
+ * ГЛАВНЫЙ ФАЙЛ АНИМАЦИЙ
+ * Структурированная версия с улучшениями
+ * ========================================================
+ */
 
-function closeMenu() {
-	btnMenu.classList.add('is-animated')
+/**
+ * Модуль для работы с бургер-меню
+ */
+const Menu = (() => {
+	const btnBurger = document.querySelector('.button__burger')
+	const btnMenu = document.querySelector('.menu')
+	const overlay = document.querySelector('.overlay')
 
-	requestAnimationFrame(() => {
-		btnBurger.classList.remove('active')
-		btnMenu.classList.remove('active')
-		overlay.classList.remove('active')
-	})
-}
+	function closeMenu() {
+		if (!btnMenu.classList.contains('active')) return
 
-btnBurger.addEventListener('click', () => {
-	btnMenu.classList.add('is-animated')
-
-	requestAnimationFrame(() => {
-		btnBurger.classList.toggle('active')
-		btnMenu.classList.toggle('active')
-		overlay.classList.toggle('active')
-	})
-})
-
-// btnBurger.addEventListener('click', closeMenu)
-overlay.addEventListener('click', closeMenu)
-
-document.addEventListener('keydown', e => {
-	if (e.key === 'Escape') {
-		closeMenu()
-	}
-})
-
-// Ждем, пока весь контент загрузится
-document.addEventListener('DOMContentLoaded', () => {
-	// Создаем "таймлайн" — цепочку анимаций
-	const tl = anime.timeline({
-		easing: 'easeOutExpo', // Тип плавности (очень мягкий выезд)
-		duration: 1000, // Длительность каждой анимации (1 сек)
-	})
-
-	tl
-		// 1. Анимируем ЛОГО
-		.add({
-			targets: '.logo',
-			translateY: [-30, 0], // Выезд сверху вниз (с -30px до 0)
-			opacity: [0, 1], // Проявление от 0 до 1
+		btnMenu.classList.add('is-animated')
+		requestAnimationFrame(() => {
+			btnBurger.classList.remove('active')
+			btnMenu.classList.remove('active')
+			overlay.classList.remove('active')
 		})
-		// 2. Анимируем ПУНКТЫ МЕНЮ (по очереди!)
-		.add(
-			{
-				targets: '.menu__item',
-				translateY: [-20, 0],
-				opacity: [0, 1],
-				delay: anime.stagger(100), // Задержка 100мс между каждым пунктом
-			},
-			'-=600'
-		) // Начать эту анимацию на 600мс раньше, чем закончится предыдущая
-		// 3. Анимируем КНОПКУ
-		.add(
-			{
-				targets: '.header__button',
-				translateY: [-40, 0],
-				scale: [0.8, 1], // Увеличение от 0.3 до нормального размера
-				opacity: [0, 1],
-				duration: 800,
-			},
-			'-=700'
-		) // Начать на 700мс раньше для плавности
+	}
 
-	// const bannerPath = document.querySelector('.ball path')
+	function toggleMenu() {
+		btnMenu.classList.add('is-animated')
+		requestAnimationFrame(() => {
+			btnBurger.classList.toggle('active')
+			btnMenu.classList.toggle('active')
+			overlay.classList.toggle('active')
+		})
+	}
 
-	// if (bannerPath) {
-	// 	const length = bannerPath.getTotalLength()
+	function init() {
+		if (!btnBurger) return
 
-	// 	bannerPath.style.strokeDasharray = length
-	// 	bannerPath.style.strokeDashoffset = length
+		btnBurger.addEventListener('click', toggleMenu)
+		overlay.addEventListener('click', closeMenu)
 
-	// 	anime({
-	// 		targets: bannerPath,
-	// 		strokeDashoffset: 0,
-	// 		duration: 5000,
-	// 		easing: 'easeInOutSine',
-	// 	})
-	// }
-})
+		document.addEventListener('keydown', e => {
+			if (e.key === 'Escape') closeMenu()
+		})
+	}
 
-document.addEventListener('DOMContentLoaded', () => {
-	const title = document.querySelector('.banner__title', '.about__title')
+	return { init, closeMenu }
+})()
 
-	if (title) {
+/**
+ * Модуль для анимаций при загрузке страницы
+ */
+const PageAnimations = (() => {
+	function initHeaderAnimation() {
+		const tl = anime.timeline({
+			easing: 'easeOutExpo',
+			duration: 1000,
+		})
+
+		tl.add({
+			targets: '.logo',
+			translateY: [-30, 0],
+			opacity: [0, 1],
+		})
+			.add(
+				{
+					targets: '.menu__item',
+					translateY: [-20, 0],
+					opacity: [0, 1],
+					delay: anime.stagger(100),
+				},
+				'-=600'
+			)
+			.add(
+				{
+					targets: '.header__button',
+					translateY: [-40, 0],
+					scale: [0.8, 1],
+					opacity: [0, 1],
+					duration: 800,
+				},
+				'-=700'
+			)
+	}
+
+	function initBannerAnimation() {
+		const title = document.querySelector('.banner__title')
+		if (!title) return
+
+		// Разбиваем заголовок на слова
 		const words = title.textContent.trim().split(' ')
-
 		title.innerHTML = words
 			.map(
 				word => `
-				<span class="word">
-					<span class="word-inner">${word}</span>
-				</span>
-			`
+        <span class="word">
+          <span class="word-inner">${word}</span>
+        </span>
+      `
 			)
 			.join(' ')
 
-		anime({
-			targets: '.banner__subtitle',
-			translateY: ['-50%', '0%'],
-			easing: 'easeInOutSine',
-			opacity: [0, 1],
-			delay: 150,
-			duration: 1000,
-		})
-		anime({
-			targets: '.banner__title .word-inner',
-			translateY: ['100%', '0%'],
+		// Последовательная анимация элементов баннера
+		const bannerTimeline = anime.timeline({
 			easing: 'easeOutExpo',
-			opacity: [0, 1],
-			duration: 2000,
-			delay: anime.stagger(700, { start: 1100 }),
-		})
-		anime({
-			targets: '.banner__text',
-			translateY: ['-100%', '0%'],
-			easing: 'easeInOutSine',
-			opacity: [0, 1],
-			delay: 3400,
 		})
 
-		anime({
-			targets: '.banner__button',
-			scale: [0, 1],
-			duration: 2000,
-			opacity: [0, 1],
-			easing: 'easeOutExpo',
-			delay: 4000,
+		bannerTimeline
+			.add({
+				targets: '.banner__subtitle',
+				translateY: ['-50%', '0%'],
+				opacity: [0, 1],
+				duration: 1000,
+				delay: 150,
+			})
+			.add(
+				{
+					targets: '.banner__title .word-inner',
+					translateY: ['100%', '0%'],
+					opacity: [0, 1],
+					duration: 2000,
+					delay: anime.stagger(700, { start: 1100 }),
+				},
+				'-=500'
+			)
+			.add(
+				{
+					targets: '.banner__text',
+					translateY: ['-100%', '0%'],
+					opacity: [0, 1],
+					duration: 1000,
+				},
+				'-=800'
+			)
+			.add(
+				{
+					targets: '.banner__button',
+					scale: [0, 1],
+					opacity: [0, 1],
+					duration: 2000,
+				},
+				'-=600'
+			)
+	}
+
+	function init() {
+		initHeaderAnimation()
+		initBannerAnimation()
+	}
+
+	return { init }
+})()
+
+/**
+ * Модуль для анимаций при скролле (с Intersection Observer)
+ */
+const ScrollAnimations = (() => {
+	// Общие настройки для всех обсерверов
+	const observerOptions = {
+		root: null,
+		rootMargin: '0px',
+		threshold: 0.3,
+	}
+
+	// Настройки для секций, которые должны анимироваться при центре экрана
+	const centerObserverOptions = {
+		root: null,
+		rootMargin: '-50% 0px -50% 0px', // Секция анимируется, когда по центру экрана
+		threshold: 0,
+	}
+
+	/**
+	 * Анимация для шариков (SVG path)
+	 */
+	function initBallAnimations() {
+		const ballObserver = new IntersectionObserver(entries => {
+			entries.forEach(entry => {
+				if (!entry.isIntersecting) return
+
+				const ball = entry.target
+				const path = ball.querySelector('path')
+				if (!path) return
+
+				const length = path.getTotalLength()
+				const delay = Number(ball.dataset.delay) || 0
+
+				path.style.strokeDasharray = length
+				path.style.strokeDashoffset = length
+
+				anime({
+					targets: path,
+					strokeDashoffset: 0,
+					duration: 7000,
+					delay,
+					easing: 'easeInOutSine',
+				})
+
+				ballObserver.unobserve(ball)
+			})
+		}, observerOptions)
+
+		document.querySelectorAll('.ball').forEach(ball => {
+			ballObserver.observe(ball)
 		})
 	}
-})
 
-// const slider = document.querySelector('.sliderService')
+	/**
+	 * Анимация для секции "About"
+	 */
+	function initAboutAnimations() {
+		const aboutObserver = new IntersectionObserver(entries => {
+			entries.forEach(entry => {
+				if (!entry.isIntersecting) return
 
-// if (slider) {
-// 	const myService = new Splide(slider, {
-// 		perPage: 1,
-// 		gap: 37,
-// 		classes: {
-// 			arrows: 'splide__arrows your-class-arrows',
-// 			arrow: 'splide__arrow your-class-arrow',
-// 			prev: 'splide__arrow--prev your-class-prev',
-// 			next: 'splide__arrow--next your-class-next',
-// 		},
-// 	})
-// 	myService.mount()
-// }
+				const item = entry.target
+				animateAboutItem(item)
+				aboutObserver.unobserve(item)
+			})
+		}, observerOptions)
 
-var serviceSlider = new Swiper('.serviceSlider', {
-	slidesPerView: 3,
-	spaceBetween: 37,
-	loop: true,
+		document.querySelectorAll('.about__item').forEach(item => {
+			aboutObserver.observe(item)
+		})
 
-	navigation: {
-		nextEl: '.service-next',
-		prevEl: '.service-prev',
-	},
-	breakpoints: {
-		50: {
-			slidesPerView: 1,
-			spaceBetween: 10,
-		},
-		300: {
-			slidesPerView: 1,
-			spaceBetween: 10,
-		},
-		640: {
-			slidesPerView: 1,
-			spaceBetween: 10,
-		},
-		800: {
-			slidesPerView: 2,
-			spaceBetween: 20,
-		},
-		1300: {
-			slidesPerView: 3,
-			spaceBetween: 37,
-		},
-	},
-})
+		function animateAboutItem(item) {
+			const elements = {
+				subtitle: item.querySelector('.about__subtitle'),
+				title: item.querySelector('.about__title'),
+				text: item.querySelector('.about__text'),
+				number: item.querySelector('.about__number'),
+				button: item.querySelector('.about__button'),
+			}
 
-const ballObserver = new IntersectionObserver(
-	entries => {
-		entries.forEach(entry => {
-			if (!entry.isIntersecting) return
-
-			const ball = entry.target
-			const path = ball.querySelector('path')
-			if (!path) return
-
-			const length = path.getTotalLength()
-			const delay = Number(ball.dataset.delay) || 0
-
-			path.style.strokeDasharray = length
-			path.style.strokeDashoffset = length
-
-			anime({
-				targets: path,
-				strokeDashoffset: 0,
-				duration: 2000,
-				delay,
-				easing: 'easeInOutSine',
+			const timeline = anime.timeline({
+				easing: 'easeOutExpo',
 			})
 
-			ballObserver.unobserve(ball) // ⬅️ ключевая строка
-		})
-	},
-	{ threshold: 0.3 }
-)
-
-document.querySelectorAll('.ball').forEach(ball => {
-	ballObserver.observe(ball)
-})
-
-const aboutObserver = new IntersectionObserver(
-	entries => {
-		entries.forEach(entry => {
-			if (!entry.isIntersecting) return
-
-			const item = entry.target
-
-			const subtitle = item.querySelector('.about__subtitle')
-			const title = item.querySelector('.about__title')
-			const text = item.querySelector('.about__text')
-			const numberTitle = item.querySelector('.about__number')
-			const button = item.querySelector('.about__button')
-
-			// Subtitle
-			if (subtitle) {
-				anime({
-					targets: subtitle,
+			if (elements.subtitle) {
+				timeline.add({
+					targets: elements.subtitle,
 					translateY: [30, 0],
 					opacity: [0, 1],
 					duration: 800,
-					easing: 'easeOutExpo',
 				})
 			}
 
-			// Title
-			if (title) {
-				anime({
-					targets: title,
-					translateY: [30, 0],
-					opacity: [0, 1],
-					duration: 1000,
-					delay: 200,
-					easing: 'easeOutExpo',
-				})
+			if (elements.title) {
+				timeline.add(
+					{
+						targets: elements.title,
+						translateY: [30, 0],
+						opacity: [0, 1],
+						duration: 1000,
+					},
+					'-=400'
+				)
 			}
 
-			// Text
-			if (text) {
-				anime({
-					targets: text,
-					translateY: [30, 0],
-					opacity: [0, 1],
-					duration: 1200,
-					delay: 400,
-					easing: 'easeOutExpo',
-				})
+			if (elements.text) {
+				timeline.add(
+					{
+						targets: elements.text,
+						translateY: [30, 0],
+						opacity: [0, 1],
+						duration: 1200,
+					},
+					'-=500'
+				)
 			}
 
-			// Button
-			if (button) {
-				anime({
-					targets: button,
-					scale: [0.8, 1],
-					opacity: [0, 1],
-					duration: 1000,
-					delay: 600,
-					easing: 'easeOutExpo',
-				})
+			if (elements.button) {
+				timeline.add(
+					{
+						targets: elements.button,
+						scale: [0.8, 1],
+						opacity: [0, 1],
+						duration: 1000,
+					},
+					'-=600'
+				)
 			}
 
-			if (numberTitle) {
+			if (elements.number) {
 				anime({
-					targets: numberTitle,
+					targets: elements.number,
 					scale: [0.8, 1],
 					opacity: [0, 1],
 					duration: 1000,
@@ -288,414 +289,340 @@ const aboutObserver = new IntersectionObserver(
 					easing: 'easeOutExpo',
 				})
 			}
+		}
+	}
 
-			// Убираем наблюдение, чтобы анимация не повторялась
-			aboutObserver.unobserve(item)
-		})
-	},
-	{ threshold: 0.3 }
-)
+	/**
+	 * Анимация для секции "Completed" (анимируется по центру экрана)
+	 */
+	function initCompletedAnimations() {
+		const completedObserver = new IntersectionObserver(entries => {
+			entries.forEach(entry => {
+				if (!entry.isIntersecting) return
 
-// Наблюдаем все about__item
-document.querySelectorAll('.about__item').forEach(item => {
-	aboutObserver.observe(item)
-})
+				const section = entry.target
+				animateCompletedSection(section)
+				completedObserver.unobserve(section)
+			})
+		}, centerObserverOptions) // Используем настройки для центра экрана
 
-var testimonialSlider = new Swiper('.testimonialSlider', {
-	slidesPerView: 2,
-	spaceBetween: 20,
-	navigation: {
-		nextEl: '.testimonial__navigation-next',
-		prevEl: '.testimonial__navigation-prev',
-	},
-	breakpoints: {
-		50: {
-			slidesPerView: 1,
-			spaceBetween: 20,
-		},
-		300: {
-			slidesPerView: 1,
-			spaceBetween: 20,
-		},
-		640: {
-			slidesPerView: 1,
-			spaceBetween: 20,
-		},
-		800: {
-			slidesPerView: 1,
-			spaceBetween: 20,
-		},
-		1300: {
-			slidesPerView: 2,
-			spaceBetween: 37,
-		},
-	},
-})
+		const completedSection = document.querySelector('.completed')
+		if (completedSection) {
+			completedObserver.observe(completedSection)
+		}
 
-const completedObserver = new IntersectionObserver(
-	entries => {
-		entries.forEach(entry => {
-			if (!entry.isIntersecting) return
-
-			const section = entry.target
+		function animateCompletedSection(section) {
 			const title = section.querySelector('.completed__title')
 			const items = section.querySelectorAll('.completed__item')
 
-			// Заголовок
-			// Заголовок
+			const timeline = anime.timeline({
+				easing: 'easeOutExpo',
+			})
+
+			if (title) {
+				timeline.add({
+					targets: title,
+					translateY: [30, 0],
+					opacity: [0, 1],
+					duration: 1000,
+				})
+			}
+
+			if (items.length > 0) {
+				timeline.add({
+					targets: items,
+					translateY: [40, 0],
+					opacity: [0, 1],
+					delay: anime.stagger(200),
+					duration: 800,
+				})
+			}
+		}
+	}
+
+	/**
+	 * Анимация для секции "Testimonial"
+	 */
+	function initTestimonialAnimations() {
+		const testimonialObserver = new IntersectionObserver(entries => {
+			entries.forEach(entry => {
+				if (!entry.isIntersecting) return
+
+				animateTestimonialElements()
+				testimonialObserver.unobserve(entry.target)
+			})
+		}, observerOptions)
+
+		const testimonialSection = document.querySelector('.testimonial')
+		if (testimonialSection) {
+			testimonialObserver.observe(testimonialSection)
+
+			// Резервный запуск через 5 секунд
+			setTimeout(() => {
+				if (!testimonialSection.classList.contains('animated')) {
+					animateTestimonialElements()
+					testimonialSection.classList.add('animated')
+				}
+			}, 5000)
+		}
+
+		function animateTestimonialElements() {
 			anime({
-				targets: title,
+				targets: '.testimonial__subtitle',
 				translateY: [30, 0],
 				opacity: [0, 1],
 				duration: 1000,
 				easing: 'easeOutExpo',
 			})
-			anime
-				.timeline()
-				.add({
-					targets: '.completed__item::after',
-					opacity: [0, 1],
-					duration: 600,
-				})
-				.add({
-					targets: '.completed__item',
-					translateY: [40, 0],
-					opacity: [0, 1],
-					delay: anime.stagger(200),
-				})
 
-			completedObserver.unobserve(section)
-		})
-	},
-	{ rootMargin: '-50% 0px -50% 0px' }
-)
+			anime({
+				targets: '.testimonial__titles',
+				translateY: [30, 0],
+				opacity: [0, 1],
+				duration: 2500,
+				delay: 200,
+				easing: 'easeOutExpo',
+			})
+		}
+	}
 
-completedObserver.observe(document.querySelector('.completed'))
-
-function startTestimonialAnimations() {
-	anime({
-		targets: '.testimonial__subtitle',
-		translateY: [30, 0],
-		opacity: [0, 1],
-		duration: 1000,
-		delay: 600,
-		easing: 'easeOutExpo',
-	})
-
-	anime({
-		targets: '.testimonial__titles',
-		translateY: [30, 0],
-		opacity: [0, 1],
-		duration: 2500,
-		delay: 800,
-		easing: 'easeOutExpo',
-	})
-}
-
-// Пробуем Intersection Observer
-if ('IntersectionObserver' in window) {
-	const observer = new IntersectionObserver(
-		entries => {
+	/**
+	 * Анимация для секции "Newsletter"
+	 */
+	function initNewsletterAnimations() {
+		const newsletterObserver = new IntersectionObserver(entries => {
 			entries.forEach(entry => {
-				if (entry.isIntersecting) {
-					startTestimonialAnimations()
-					observer.unobserve(entry.target)
-				}
+				if (!entry.isIntersecting) return
+
+				animateNewsletterSection()
+				newsletterObserver.unobserve(entry.target)
 			})
-		},
-		{ threshold: 0.1 }
-	)
+		}, observerOptions)
 
-	const testimonialSection = document.querySelector('.testimonial')
-	if (testimonialSection) {
-		observer.observe(testimonialSection)
-
-		// Резервный запуск через 5 секунд на случай, если пользователь не проскроллит
-		setTimeout(() => {
-			if (!testimonialSection.classList.contains('animated')) {
-				startTestimonialAnimations()
-				testimonialSection.classList.add('animated')
-			}
-		}, 5000)
-	}
-} else {
-	// Fallback для старых браузеров
-	window.addEventListener('scroll', function () {
-		const testimonialSection = document.querySelector('.testimonial')
-		const rect = testimonialSection.getBoundingClientRect()
-
-		if (rect.top < window.innerHeight && !testimonialSection.classList.contains('animated')) {
-			startTestimonialAnimations()
-			testimonialSection.classList.add('animated')
-		}
-	})
-}
-
-// ==================== ОСНОВНАЯ ИНИЦИАЛИЗАЦИЯ ====================
-document.addEventListener('DOMContentLoaded', () => {
-	Menu.init()
-	PageAnimations.init()
-	ScrollAnimations.init()
-	const sliders = Sliders.init()
-
-	// Экспорт слайдеров в глобальную область видимости при необходимости
-	window.appSliders = sliders
-})
-
-// В JavaScript
-const NewsletterAnimation = (() => {
-	function initWaveParticles() {
-		const newsletter = document.querySelector('.newsletter')
-		if (!newsletter) return
-
-		// Создаем частицы
-		for (let i = 0; i < 20; i++) {
-			const particle = document.createElement('div')
-			particle.className = 'newsletter-particle'
-			particle.style.cssText = `
-        position: absolute;
-        width: ${Math.random() * 6 + 2}px;
-        height: ${Math.random() * 6 + 2}px;
-        background: rgba(255, 255, 255, ${Math.random() * 0.3 + 0.1});
-        border-radius: 50%;
-        left: ${Math.random() * 100}%;
-        top: ${Math.random() * 100}%;
-        pointer-events: none;
-      `
-			newsletter.appendChild(particle)
-
-			// Анимация частицы
-			anime({
-				targets: particle,
-				translateX: () => Math.random() * 100 - 50,
-				translateY: () => Math.random() * 100 - 50,
-				opacity: [0, 1, 0],
-				scale: [0, 1, 0],
-				duration: 3000 + Math.random() * 2000,
-				delay: Math.random() * 1000,
-				loop: true,
-
-				easing: 'easeInOutSine',
-			})
+		const newsletterSection = document.querySelector('.newsletter')
+		if (newsletterSection) {
+			newsletterObserver.observe(newsletterSection)
 		}
 
-		// Анимация появления контента
-		const tl = anime.timeline({
-			easing: 'spring(1, 80, 10, 0)',
-		})
+		function animateNewsletterSection() {
+			const tl = anime.timeline({
+				easing: 'spring(1, 80, 10, 0)',
+			})
 
-		tl.add({
-			targets: '.newsletter__title',
-			translateY: [80, 0],
-			opacity: [0, 1],
-			duration: 1200,
-		})
-			.add(
-				{
-					targets: '.line',
-					scaleX: [0, 1],
-					opacity: [0, 1],
-					duration: 800,
-				},
-				'-=600'
-			)
-			.add(
-				{
-					targets: '.newsletter__text',
-					translateY: [60, 0],
-					opacity: [0, 1],
-					duration: 1000,
-				},
-				'-=400'
-			)
-			.add(
-				{
-					targets: '.newsletter__form',
-					translateY: [50, 0],
-					opacity: [0, 1],
-					duration: 1000,
-					complete: () => {
-						initInputAnimation()
+			tl.add({
+				targets: '.newsletter__title',
+				translateY: [80, 0],
+				opacity: [0, 1],
+				duration: 1200,
+			})
+				.add(
+					{
+						targets: '.newsletter__line',
+						scaleX: [0, 1],
+						opacity: [0, 1],
+						duration: 800,
 					},
-				},
-				'-=400'
-			)
+					'-=600'
+				)
+				.add(
+					{
+						targets: '.newsletter__text',
+						translateY: [60, 0],
+						opacity: [0, 1],
+						duration: 1000,
+					},
+					'-=400'
+				)
+				.add(
+					{
+						targets: '.newsletter__form',
+						translateY: [50, 0],
+						opacity: [0, 1],
+						duration: 1000,
+					},
+					'-=400'
+				)
+
+			// Партиклы для фона
+			createNewsletterParticles()
+			initNewsletterInputEffects()
+		}
+
+		function createNewsletterParticles() {
+			const newsletter = document.querySelector('.newsletter')
+			if (!newsletter) return
+
+			for (let i = 0; i < 20; i++) {
+				const particle = document.createElement('div')
+				particle.className = 'newsletter-particle'
+				particle.style.cssText = `
+          position: absolute;
+          width: ${Math.random() * 6 + 2}px;
+          height: ${Math.random() * 6 + 2}px;
+          background: rgba(255, 255, 255, ${Math.random() * 0.3 + 0.1});
+          border-radius: 50%;
+          left: ${Math.random() * 100}%;
+          top: ${Math.random() * 100}%;
+          pointer-events: none;
+          z-index: 1;
+        `
+				newsletter.appendChild(particle)
+
+				anime({
+					targets: particle,
+					translateX: () => Math.random() * 100 - 50,
+					translateY: () => Math.random() * 100 - 50,
+					opacity: [0, 1, 0],
+					scale: [0, 1, 0],
+					duration: 3000 + Math.random() * 2000,
+					delay: Math.random() * 1000,
+					loop: true,
+					easing: 'easeInOutSine',
+				})
+			}
+		}
+
+		function initNewsletterInputEffects() {
+			const input = document.querySelector('.newsletter__input')
+			const button = document.querySelector('.newsletter__button')
+
+			if (input && button) {
+				// Анимация placeholder
+				anime({
+					targets: input,
+					borderWidth: ['1px', '2px'],
+					borderColor: ['#ccc', '#4a90e2'],
+					duration: 2000,
+					loop: true,
+					direction: 'alternate',
+					easing: 'easeInOutSine',
+				})
+
+				// Пульсация кнопки
+				anime({
+					targets: button,
+					scale: [1, 1.05],
+					boxShadow: ['0 4px 6px rgba(0,0,0,0.1)', '0 10px 20px rgba(74, 144, 226, 0.3)'],
+					duration: 1500,
+					loop: true,
+					direction: 'alternate',
+					easing: 'easeInOutSine',
+				})
+
+				// Интерактивность
+				input.addEventListener('focus', () => {
+					anime({
+						targets: input,
+						scale: 1.02,
+						borderColor: '#2563eb',
+						duration: 300,
+					})
+				})
+
+				input.addEventListener('blur', () => {
+					anime({
+						targets: input,
+						scale: 1,
+						borderColor: '#ccc',
+						duration: 300,
+					})
+				})
+			}
+		}
 	}
 
-	function initInputAnimation() {
-		const input = document.querySelector('.newsletter__input')
-		const button = document.querySelector('.newsletter__button')
-
-		// Анимация placeholder
-		anime({
-			targets: input,
-			borderWidth: ['1px', '2px'],
-			borderColor: ['#ccc', '#4a90e2'],
-			duration: 2000,
-			loop: true,
-			direction: 'alternate',
-			easing: 'easeInOutSine',
-		})
-
-		// Эффект пульсации кнопки
-		anime({
-			targets: button,
-			scale: [1, 1.05],
-			boxShadow: ['0 4px 6px rgba(0,0,0,0.1)', '0 10px 20px rgba(74, 144, 226, 0.3)'],
-			duration: 1500,
-			loop: true,
-			direction: 'alternate',
-			easing: 'easeInOutSine',
-		})
-
-		// Интерактивность
-		input.addEventListener('focus', () => {
-			anime({
-				targets: input,
-				scale: 1.02,
-				borderColor: '#2563eb',
-				duration: 300,
-				easing: 'easeOutBack',
-			})
-		})
-
-		input.addEventListener('blur', () => {
-			anime({
-				targets: input,
-				scale: 1,
-				borderColor: '#ccc',
-				duration: 300,
-			})
-		})
-	}
-
-	return { init: initWaveParticles }
-})()
-
-// В DOMContentLoaded
-NewsletterAnimation.init()
-
-// JavaScript для анимаций футера
-const FooterAnimation = (() => {
-	function init() {
-		// Обновляем год
-		updateCurrentYear()
-
-		// Инициализируем анимации
-		initScrollAnimations()
-		initHoverEffects()
-		initScrollToTop()
-
-		// Создаем частицы в футере
-		createFooterParticles()
-	}
-
-	function updateCurrentYear() {
+	/**
+	 * Анимация для футера
+	 */
+	function initFooterAnimations() {
+		// Обновляем год в футере
 		const yearElement = document.querySelector('.current-year')
 		if (yearElement) {
 			yearElement.textContent = new Date().getFullYear()
 		}
-	}
 
-	function initScrollAnimations() {
-		const observerOptions = {
-			threshold: 0.1,
-			rootMargin: '0px 0px -50px 0px',
-		}
-
-		const observer = new IntersectionObserver(entries => {
+		const footerObserver = new IntersectionObserver(entries => {
 			entries.forEach(entry => {
-				if (entry.isIntersecting) {
-					const element = entry.target
+				if (!entry.isIntersecting) return
 
-					// Добавляем задержку для каждого элемента
-					const delay = element.dataset.delay || 0
-
-					setTimeout(() => {
-						element.classList.add('visible')
-
-						// Особые анимации для разных типов элементов
-						if (element.classList.contains('footer__item')) {
-							animateLinks(element)
-						}
-					}, delay)
-				}
+				animateFooterElements()
+				footerObserver.unobserve(entry.target)
 			})
 		}, observerOptions)
 
-		// Наблюдаем все элементы с анимацией
-		document.querySelectorAll('[data-animate]').forEach(element => {
-			observer.observe(element)
-		})
-	}
+		const footerSection = document.querySelector('.footer')
+		if (footerSection) {
+			footerObserver.observe(footerSection)
+			initFooterHoverEffects()
+			initScrollToTop()
+			createFooterParticles()
+		}
 
-	function animateLinks(container) {
-		const links = container.querySelectorAll('.footer__link')
-		links.forEach((link, index) => {
-			anime({
-				targets: link,
-				opacity: [0, 1],
-				translateX: [-20, 0],
-				delay: index * 100,
-				duration: 500,
-				easing: 'easeOutExpo',
-			})
-		})
-	}
-
-	function initHoverEffects() {
-		// Эффект при наведении на лого
-		const logoLink = document.querySelector('.footer__logo-link')
-		if (logoLink) {
-			logoLink.addEventListener('mouseenter', () => {
+		function animateFooterElements() {
+			const footerItems = document.querySelectorAll('.footer__item')
+			footerItems.forEach((item, index) => {
 				anime({
-					targets: '.logo-animate',
-					scale: [1, 1.1],
-					rotate: [0, 5],
-					duration: 300,
-					easing: 'easeOutBack',
-				})
-			})
-
-			logoLink.addEventListener('mouseleave', () => {
-				anime({
-					targets: '.logo-animate',
-					scale: 1,
-					rotate: 0,
-					duration: 300,
-					easing: 'easeOutBack',
+					targets: item,
+					translateY: [30, 0],
+					opacity: [0, 1],
+					duration: 800,
+					delay: index * 100,
+					easing: 'easeOutExpo',
 				})
 			})
 		}
 
-		// Эффект для соц. иконок
-		document.querySelectorAll('.social-icon').forEach(icon => {
-			icon.addEventListener('mouseenter', () => {
-				anime({
-					targets: icon,
-					scale: 1.1,
-					rotate: [0, 360],
-					duration: 600,
-					easing: 'easeOutBack',
+		function initFooterHoverEffects() {
+			// Эффект для лого
+			const logoLink = document.querySelector('.footer__logo-link')
+			if (logoLink) {
+				logoLink.addEventListener('mouseenter', () => {
+					anime({
+						targets: '.logo-animate',
+						scale: [1, 1.1],
+						rotate: [0, 5],
+						duration: 300,
+						easing: 'easeOutBack',
+					})
+				})
+
+				logoLink.addEventListener('mouseleave', () => {
+					anime({
+						targets: '.logo-animate',
+						scale: 1,
+						rotate: 0,
+						duration: 300,
+					})
+				})
+			}
+
+			// Эффект для соц. иконок
+			document.querySelectorAll('.social-icon').forEach(icon => {
+				icon.addEventListener('mouseenter', () => {
+					anime({
+						targets: icon,
+						scale: 1.1,
+						rotate: 360,
+						duration: 600,
+						easing: 'easeOutBack',
+					})
+				})
+
+				icon.addEventListener('mouseleave', () => {
+					anime({
+						targets: icon,
+						scale: 1,
+						rotate: 0,
+						duration: 300,
+					})
 				})
 			})
+		}
 
-			icon.addEventListener('mouseleave', () => {
-				anime({
-					targets: icon,
-					scale: 1,
-					rotate: 0,
-					duration: 300,
-				})
-			})
-		})
-	}
+		function initScrollToTop() {
+			const scrollBtn = document.querySelector('.footer__scroll-top')
+			if (!scrollBtn) return
 
-	function initScrollToTop() {
-		const scrollBtn = document.querySelector('.footer__scroll-top')
-
-		if (scrollBtn) {
-			// Показываем кнопку при скролле
 			window.addEventListener('scroll', () => {
 				if (window.pageYOffset > 300) {
 					scrollBtn.classList.add('visible')
@@ -704,7 +631,6 @@ const FooterAnimation = (() => {
 				}
 			})
 
-			// Скролл наверх при клике
 			scrollBtn.addEventListener('click', () => {
 				anime({
 					targets: scrollBtn,
@@ -713,10 +639,7 @@ const FooterAnimation = (() => {
 					duration: 300,
 					easing: 'easeOutBack',
 					complete: () => {
-						window.scrollTo({
-							top: 0,
-							behavior: 'smooth',
-						})
+						window.scrollTo({ top: 0, behavior: 'smooth' })
 						setTimeout(() => {
 							anime({
 								targets: scrollBtn,
@@ -729,60 +652,148 @@ const FooterAnimation = (() => {
 				})
 			})
 		}
+
+		function createFooterParticles() {
+			const footer = document.querySelector('.footer')
+			if (!footer) return
+
+			for (let i = 0; i < 15; i++) {
+				const particle = document.createElement('div')
+				particle.style.cssText = `
+          position: absolute;
+          width: ${Math.random() * 4 + 1}px;
+          height: ${Math.random() * 4 + 1}px;
+          background: rgba(55, 128, 107, ${Math.random() * 0.3 + 0.1});
+          border-radius: 50%;
+          left: ${Math.random() * 100}%;
+          top: ${Math.random() * 100}%;
+          pointer-events: none;
+          z-index: 1;
+        `
+				footer.appendChild(particle)
+
+				anime({
+					targets: particle,
+					translateX: () => Math.random() * 100 - 50,
+					translateY: () => Math.random() * 100 - 50,
+					opacity: [0, 1, 0],
+					scale: [0, 1, 0],
+					duration: 4000 + Math.random() * 3000,
+					delay: Math.random() * 2000,
+					loop: true,
+					easing: 'easeInOutSine',
+				})
+			}
+		}
 	}
 
-	function createFooterParticles() {
-		const footer = document.querySelector('.footer')
-		if (!footer) return
-
-		// Создаем контейнер для частиц
-		const particlesContainer = document.createElement('div')
-		particlesContainer.className = 'footer-particles'
-		particlesContainer.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    `
-		footer.appendChild(particlesContainer)
-
-		// Создаем частицы
-		for (let i = 0; i < 15; i++) {
-			const particle = document.createElement('div')
-			particle.style.cssText = `
-        position: absolute;
-        width: ${Math.random() * 4 + 1}px;
-        height: ${Math.random() * 4 + 1}px;
-        background: rgba(55, 128, 107, ${Math.random() * 0.3 + 0.1});
-        border-radius: 50%;
-        left: ${Math.random() * 100}%;
-        top: ${Math.random() * 100}%;
-        pointer-events: none;
-      `
-			particlesContainer.appendChild(particle)
-
-			// Анимация частицы
-			anime({
-				targets: particle,
-				translateX: () => Math.random() * 100 - 50,
-				translateY: () => Math.random() * 100 - 50,
-				opacity: [0, 1, 0],
-				scale: [0, 1, 0],
-				duration: 4000 + Math.random() * 3000,
-				delay: Math.random() * 2000,
-				loop: true,
-				easing: 'easeInOutSine',
-			})
-		}
+	function init() {
+		initBallAnimations()
+		initAboutAnimations()
+		initCompletedAnimations()
+		initTestimonialAnimations()
+		initNewsletterAnimations()
+		initFooterAnimations()
 	}
 
 	return { init }
 })()
 
-// Инициализация при загрузке страницы
+/**
+ * Модуль для инициализации слайдеров
+ */
+const Sliders = (() => {
+	function init() {
+		let serviceSlider = null
+		let testimonialSlider = null
+
+		// Service Slider
+		const serviceSliderEl = document.querySelector('.serviceSlider')
+		if (serviceSliderEl) {
+			serviceSlider = new Swiper('.serviceSlider', {
+				slidesPerView: 3,
+				spaceBetween: 37,
+				loop: true,
+				navigation: {
+					nextEl: '.service-next',
+					prevEl: '.service-prev',
+				},
+				breakpoints: {
+					50: { slidesPerView: 1, spaceBetween: 10 },
+					300: { slidesPerView: 1, spaceBetween: 10 },
+					640: { slidesPerView: 1, spaceBetween: 10 },
+					800: { slidesPerView: 2, spaceBetween: 20 },
+					1300: { slidesPerView: 3, spaceBetween: 37 },
+				},
+			})
+		}
+
+		// Testimonial Slider
+		const testimonialSliderEl = document.querySelector('.testimonialSlider')
+		if (testimonialSliderEl) {
+			testimonialSlider = new Swiper('.testimonialSlider', {
+				slidesPerView: 2,
+				spaceBetween: 20,
+				navigation: {
+					nextEl: '.testimonial__navigation-next',
+					prevEl: '.testimonial__navigation-prev',
+				},
+				breakpoints: {
+					50: { slidesPerView: 1, spaceBetween: 20 },
+					300: { slidesPerView: 1, spaceBetween: 20 },
+					640: { slidesPerView: 1, spaceBetween: 20 },
+					800: { slidesPerView: 1, spaceBetween: 20 },
+					1300: { slidesPerView: 2, spaceBetween: 37 },
+				},
+			})
+		}
+
+		return { serviceSlider, testimonialSlider }
+	}
+
+	return { init }
+})()
+
+/**
+ * Глобальная инициализация при загрузке страницы
+ */
 document.addEventListener('DOMContentLoaded', () => {
-	FooterAnimation.init()
+	// Инициализация всех модулей
+	Menu.init()
+	PageAnimations.init()
+	ScrollAnimations.init()
+
+	// Инициализация слайдеров
+	const sliders = Sliders.init()
+
+	// Экспорт слайдеров в глобальную область видимости (если нужно)
+	window.appSliders = sliders
 })
+
+/**
+ * Полифил для requestAnimationFrame
+ */
+;(function () {
+	var lastTime = 0
+	var vendors = ['ms', 'moz', 'webkit', 'o']
+	for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+		window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame']
+		window.cancelAnimationFrame =
+			window[vendors[x] + 'CancelAnimationFrame'] ||
+			window[vendors[x] + 'CancelRequestAnimationFrame']
+	}
+	if (!window.requestAnimationFrame)
+		window.requestAnimationFrame = function (callback, element) {
+			var currTime = new Date().getTime()
+			var timeToCall = Math.max(0, 16 - (currTime - lastTime))
+			var id = window.setTimeout(function () {
+				callback(currTime + timeToCall)
+			}, timeToCall)
+			lastTime = currTime + timeToCall
+			return id
+		}
+	if (!window.cancelAnimationFrame)
+		window.cancelAnimationFrame = function (id) {
+			clearTimeout(id)
+		}
+})()
